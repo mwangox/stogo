@@ -1,4 +1,4 @@
-module github.com/stogo
+module github.com/mwangox/stogo
 
 go 1.20
 

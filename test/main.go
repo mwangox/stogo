@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/stogo"
-	"github.com/stogo/config"
+	"github.com/mwangox/stogo"
+	"github.com/mwangox/stogo/config"
 	"log"
 	"time"
 )
