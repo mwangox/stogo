@@ -129,6 +129,16 @@ func (c *StooClient) SetDefault(key, value string) (string, error) {
 	return c.Set(defaultNamespace, defaultProfile, key, value)
 }
 
+// SetSecretDefault set secret value for a key in a given default namespace and profile
+func (c *StooClient) SetSecretDefault(key, value string) (string, error) {
+	defaultNamespace := c.Config.GetDefaultNamespace()
+	defaultProfile := c.Config.GetDefaultProfile()
+	if err := validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile); err != nil {
+		return "", err
+	}
+	return c.SetSecret(defaultNamespace, defaultProfile, key, value)
+}
+
 // DeleteDefault delete a key from a given default namespace and profile
 func (c *StooClient) DeleteDefault(key string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
