@@ -41,7 +41,8 @@ func NewStoreClient(cfg *config.StooConfig) *StooClient {
 	}
 
 	client := proto.NewKVServiceClient(conn)
-	return &StooClient{Config: cfg,
+	return &StooClient{
+		Config: cfg,
 		client: client,
 	}
 }
@@ -72,6 +73,19 @@ func (c *StooClient) Set(namespace, profile, key, value string) (string, error) 
 	return res.GetData(), err
 }
 
+// SetSecret a key to a namespace and profile
+func (c *StooClient) SetSecret(namespace, profile, key, value string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
+	defer cancel()
+	res, err := c.client.SetSecretKeyService(ctx, &proto.SetKeyRequest{
+		Namespace: namespace,
+		Profile:   profile,
+		Key:       key,
+		Value:     value,
+	})
+	return res.GetData(), err
+}
+
 // Delete a key from a given namespace and profile
 func (c *StooClient) Delete(namespace, profile, key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
@@ -84,8 +98,8 @@ func (c *StooClient) Delete(namespace, profile, key string) (string, error) {
 	return res.GetData(), err
 }
 
-// GetAll get all keys from a given namespace and profile
-func (c *StooClient) GetAll(namespace, profile string) (map[string]string, error) {
+// GetAllByNamespaceAndProfile get all keys from a given namespace and profile
+func (c *StooClient) GetAllByNamespaceAndProfile(namespace, profile string) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
 	res, err := c.client.GetServiceByNamespaceAndProfile(ctx, &proto.GetByNamespaceAndProfileRequest{
@@ -99,43 +113,46 @@ func (c *StooClient) GetAll(namespace, profile string) (map[string]string, error
 func (c *StooClient) GetDefault(key string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
-
-	if defaultNamespace != "" && defaultProfile != "" {
-		return c.Get(defaultNamespace, defaultProfile, key)
+	if err := validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile); err != nil {
+		return "", err
 	}
-	return "", ErrDefaultNamespaceAndProfileMustBeDefined
+	return c.Get(defaultNamespace, defaultProfile, key)
 }
 
 // SetDefault set value for a key in a given default namespace and profile
 func (c *StooClient) SetDefault(key, value string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
-
-	if defaultNamespace != "" && defaultProfile != "" {
-		return c.Set(defaultNamespace, defaultProfile, key, value)
+	if err := validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile); err != nil {
+		return "", err
 	}
-	return "", ErrDefaultNamespaceAndProfileMustBeDefined
+	return c.Set(defaultNamespace, defaultProfile, key, value)
 }
 
 // DeleteDefault delete a key from a given default namespace and profile
 func (c *StooClient) DeleteDefault(key string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
-
-	if defaultNamespace != "" && defaultProfile != "" {
-		return c.Delete(defaultNamespace, defaultProfile, key)
+	if err := validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile); err != nil {
+		return "", err
 	}
-	return "", ErrDefaultNamespaceAndProfileMustBeDefined
+	return c.Delete(defaultNamespace, defaultProfile, key)
+}
+
+// GetAllByDefaultNamespaceAndProfile all key value pairs from given default namespace and profile
+func (c *StooClient) GetAllByDefaultNamespaceAndProfile() (map[string]string, error) {
+	defaultNamespace := c.Config.GetDefaultNamespace()
+	defaultProfile := c.Config.GetDefaultProfile()
+	if err := validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile); err != nil {
+		return nil, err
+	}
+	return c.GetAllByNamespaceAndProfile(defaultNamespace, defaultProfile)
 
 }
 
-// GetAllDefault all key value pairs from given default namespace and profile
-func (c *StooClient) GetAllDefault() (map[string]string, error) {
-	defaultNamespace := c.Config.GetDefaultNamespace()
-	defaultProfile := c.Config.GetDefaultProfile()
-
+func validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile string) error {
 	if defaultNamespace != "" && defaultProfile != "" {
-		return c.GetAll(defaultNamespace, defaultProfile)
+		return nil
 	}
-	return nil, ErrDefaultNamespaceAndProfileMustBeDefined
+	return ErrDefaultNamespaceAndProfileMustBeDefined
 }

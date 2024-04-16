@@ -17,6 +17,8 @@ type TLS struct {
 	ServerNameOverride  string
 }
 
+const DefaultTimeout = 10 * time.Second
+
 func NewDefaultStooConfig() *StooConfig {
 	return &StooConfig{
 		endpoint:    "localhost:50051",
@@ -25,13 +27,17 @@ func NewDefaultStooConfig() *StooConfig {
 }
 
 func NewStooConfig(endpoint string, timeout time.Duration) *StooConfig {
-	if endpoint != "" && timeout != 0 {
+	if timeout == 0 {
+		timeout = DefaultTimeout
+	}
+
+	if endpoint != "" {
 		return &StooConfig{
 			endpoint:    endpoint,
 			readTimeout: timeout,
 		}
 	}
-	panic("endpoint and timeout must be provided")
+	panic("endpoint must be provided")
 }
 
 func (s *StooConfig) WithUseTls(useTls bool) *StooConfig {
