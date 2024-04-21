@@ -1,3 +1,5 @@
+// Package stogo defines StooClient that carries methods for connecting and interacting
+// with StooKV server. The methods wrap around the gRPC operations to StooKV.
 package stogo
 
 import (
@@ -12,13 +14,35 @@ import (
 	"log"
 )
 
+// StooClient holds stoo client and the associated configurations.
 type StooClient struct {
 	Config *config.StooConfig
 	client proto.KVServiceClient
 }
 
+// ErrDefaultNamespaceAndProfileMustBeDefined thrown by *default methods when called while default
+// namespace and profile are not defined.
 var ErrDefaultNamespaceAndProfileMustBeDefined = errors.New("default namespace and profile must be set to use this method")
 
+// NewStoreClient constructs stoo client from given configurations.
+//
+// Minimum configurations usage example:
+//
+//	stooConfig := config.NewStooConfig("localhost:50051", 20*time.Second)
+//
+// Extended configurations usage example:
+//
+//	  	stooConfig := config.NewStooConfig("localhost:50051", 20*time.Second).
+//				WithDefaultNamespace("my-app").
+//			    WithDefaultProfile("prod").
+//	  		WithUseTls(true).
+//	 		WithTls(&config.TLS{
+//				SkipTlsVerification: false,
+//				CaCertPath:          "/stookv/ca_cert.pem",
+//				ServerNameOverride:  "stookv.example.com",
+//			})
+//
+//		client := stogo.NewStoreClient(stooConfig)
 func NewStoreClient(cfg *config.StooConfig) *StooClient {
 	var options []grpc.DialOption
 	if cfg.GetUseTls() {
@@ -47,7 +71,14 @@ func NewStoreClient(cfg *config.StooConfig) *StooClient {
 	}
 }
 
-// Get value stored using namespace, profile and key
+// Get gets a value stored using namespace, profile and key.
+//
+//	 Usage example:
+//		   data, err := client.Get("my-app", "prod", "database.username")
+//		   if err != nil {
+//		     log.Fatalf("Error reading key from server %v", err)
+//		   }
+//		   log.Printf("Result: %v", data)
 func (c *StooClient) Get(namespace, profile, key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
@@ -60,7 +91,15 @@ func (c *StooClient) Get(namespace, profile, key string) (string, error) {
 	return res.GetData(), err
 }
 
-// Set a key to a namespace and profile
+// Set sets a key to a namespace and profile.
+//
+// Usage example:
+//
+//	   res, err := client.Set("my-app", "prod", "database.username", "lauryn.hill")
+//		  if err != nil {
+//		      log.Fatalf("Error in setting value %v", err)
+//		  }
+//		  log.Printf("Set result: %v", res)
 func (c *StooClient) Set(namespace, profile, key, value string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
@@ -73,7 +112,14 @@ func (c *StooClient) Set(namespace, profile, key, value string) (string, error) 
 	return res.GetData(), err
 }
 
-// SetSecret a key to a namespace and profile
+// SetSecret sets a key to a namespace and profile in an encrypted format.
+// Usage example:
+//
+//	   res, err := client.SetSecret("my-app", "prod", "database.password", "the-scrore@1996")
+//		  if err != nil {
+//		      log.Fatalf("Error in setting secret value %v", err)
+//		  }
+//		  log.Printf("SetSecret result: %v", res)
 func (c *StooClient) SetSecret(namespace, profile, key, value string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
@@ -86,7 +132,15 @@ func (c *StooClient) SetSecret(namespace, profile, key, value string) (string, e
 	return res.GetData(), err
 }
 
-// Delete a key from a given namespace and profile
+// Delete removes a key from a given namespace and profile
+//
+// Usage example:
+//
+//	   res, err := client.Delete("my-app", "prod", "database.password")
+//	   if err != nil {
+//		    log.Fatalf("Error deleting a key %v", err)
+//	   }
+//	   log.Printf("delete result: %v", res)
 func (c *StooClient) Delete(namespace, profile, key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
@@ -98,7 +152,15 @@ func (c *StooClient) Delete(namespace, profile, key string) (string, error) {
 	return res.GetData(), err
 }
 
-// GetAllByNamespaceAndProfile get all keys from a given namespace and profile
+// GetAllByNamespaceAndProfile gets all keys from a given namespace and profile.
+//
+// Usage example:
+//
+//	  all, err := client.GetAllByNamespaceAndProfile("my-app", "prod")
+//	  if err != nil {
+//		   log.Fatalf("Error reading all keys from server %v", err)
+//	  }
+//	  log.Printf("all keys values : %v", all)
 func (c *StooClient) GetAllByNamespaceAndProfile(namespace, profile string) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Config.GetReadTimeout())
 	defer cancel()
@@ -109,7 +171,7 @@ func (c *StooClient) GetAllByNamespaceAndProfile(namespace, profile string) (map
 	return res.GetData(), err
 }
 
-// GetDefault get a value for a key in a given default namespace and profile
+// GetDefault gets a value for a key in a given default namespace and profile.
 func (c *StooClient) GetDefault(key string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
@@ -119,7 +181,7 @@ func (c *StooClient) GetDefault(key string) (string, error) {
 	return c.Get(defaultNamespace, defaultProfile, key)
 }
 
-// SetDefault set value for a key in a given default namespace and profile
+// SetDefault sets value for a key in a given default namespace and profile.
 func (c *StooClient) SetDefault(key, value string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
@@ -129,7 +191,7 @@ func (c *StooClient) SetDefault(key, value string) (string, error) {
 	return c.Set(defaultNamespace, defaultProfile, key, value)
 }
 
-// SetSecretDefault set secret value for a key in a given default namespace and profile
+// SetSecretDefault sets secret value for a key in a given default namespace and profile.
 func (c *StooClient) SetSecretDefault(key, value string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
@@ -139,7 +201,7 @@ func (c *StooClient) SetSecretDefault(key, value string) (string, error) {
 	return c.SetSecret(defaultNamespace, defaultProfile, key, value)
 }
 
-// DeleteDefault delete a key from a given default namespace and profile
+// DeleteDefault removes a key from a given default namespace and profile.
 func (c *StooClient) DeleteDefault(key string) (string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
@@ -149,7 +211,7 @@ func (c *StooClient) DeleteDefault(key string) (string, error) {
 	return c.Delete(defaultNamespace, defaultProfile, key)
 }
 
-// GetAllByDefaultNamespaceAndProfile all key value pairs from given default namespace and profile
+// GetAllByDefaultNamespaceAndProfile gets all key value pairs from a given default namespace and profile.
 func (c *StooClient) GetAllByDefaultNamespaceAndProfile() (map[string]string, error) {
 	defaultNamespace := c.Config.GetDefaultNamespace()
 	defaultProfile := c.Config.GetDefaultProfile()
@@ -160,6 +222,7 @@ func (c *StooClient) GetAllByDefaultNamespaceAndProfile() (map[string]string, er
 
 }
 
+// validateDefaultNamespaceAndProfile checks if all defaultNamespace and defaultProfile are being set.
 func validateDefaultNamespaceAndProfile(defaultNamespace, defaultProfile string) error {
 	if defaultNamespace != "" && defaultProfile != "" {
 		return nil
