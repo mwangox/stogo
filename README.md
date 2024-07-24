@@ -4,7 +4,7 @@
 `stookv`.
 
 [![Go Reference](https://pkg.go.dev/badge/golang.org)](https://pkg.go.dev/golang.org/x/text)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](MIT-LICENSE)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Install
 
@@ -75,7 +75,7 @@ func main() {
 
 ## License
 
-The project is licensed under [MIT license](./MIT-LICENSE).
+The project is licensed under [MIT license](./LICENSE).
 
 ### Contribution
 
