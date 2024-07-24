@@ -1,3 +1,5 @@
+// Package config defines configurations required in establishing connection
+// to stookv instance.
 package config
 
 import (
@@ -5,7 +7,7 @@ import (
 	"time"
 )
 
-// StooConfig holds data to be used during interactions with StooKV using StooClient
+// StooConfig holds data to be used during interactions with StooKV using StooClient.
 type StooConfig struct {
 	// endpoint grpc endpoint, http or https.
 	endpoint string
@@ -57,7 +59,6 @@ func NewStooConfig(endpoint string, timeout time.Duration) *StooConfig {
 	}
 	log.Fatal("endpoint must be defined")
 	return nil
-
 }
 
 // WithUseTls sets useTls.

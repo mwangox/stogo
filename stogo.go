@@ -33,8 +33,8 @@ var ErrDefaultNamespaceAndProfileMustBeDefined = errors.New("default namespace a
 // Extended configurations usage example:
 //
 //	  	stooConfig := config.NewStooConfig("localhost:50051", 20*time.Second).
-//				WithDefaultNamespace("my-app").
-//			    WithDefaultProfile("prod").
+//			WithDefaultNamespace("my-app").
+//			WithDefaultProfile("prod").
 //	  		WithUseTls(true).
 //	 		WithTls(&config.TLS{
 //				SkipTlsVerification: false,
