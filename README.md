@@ -1,6 +1,6 @@
 # Stogo
 
-`Stogo` is the Go library for `stookv`. It has abstracted the low level communication details with
+`Stogo` is the Go library for [stookv](https://github.com/mwangox/stookv). It has abstracted the low level communication details with
 `stookv`.
 
 [![Go Reference](https://pkg.go.dev/badge/golang.org)](https://pkg.go.dev/golang.org/x/text)
